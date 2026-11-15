@@ -279,6 +279,7 @@ export function IdeasBrowser({
                 liked={likedSet.has(i.id)}
                 isMatch={matchSet.has(i.id)}
                 reviews={reviewsByIdeaId[i.id]}
+                photos={photosByIdeaId[i.id]}
                 currentUserId={currentUserId}
                 profilesById={profilesById}
               />

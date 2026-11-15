@@ -1,18 +1,22 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Loader2, MessageSquarePlus, Star } from "lucide-react";
 import { saveIdeaMemory } from "@/app/actions/ideas";
-import type { IdeaReview } from "@/lib/types";
+import { PhotoUploader } from "@/components/photo-uploader";
+import type { IdeaPhoto, IdeaReview } from "@/lib/types";
 
 export function IdeaMemory({
   ideaId,
   reviews,
+  photos = [],
   currentUserId,
   profilesById,
 }: {
   ideaId: string;
   reviews: IdeaReview[];
+  photos?: IdeaPhoto[];
   currentUserId: string;
   profilesById: Record<string, string>;
 }) {
@@ -55,15 +59,39 @@ export function IdeaMemory({
         </div>
       )}
 
+      {photos.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {photos.map((photo) => (
+            <a
+              key={photo.id}
+              href={photo.url}
+              target="_blank"
+              rel="noreferrer"
+              className="block h-16 w-16 overflow-hidden rounded-lg border border-stone-200 bg-stone-100"
+            >
+              <img
+                src={photo.url}
+                alt="Date memory"
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+
       {!editing ? (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50"
-        >
-          <MessageSquarePlus className="h-3.5 w-3.5 text-rose-600" aria-hidden="true" />
-          {mine ? "Edit my memory" : "Add memory"}
-        </button>
+        <div className="flex flex-wrap items-start gap-2">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50"
+          >
+            <MessageSquarePlus className="h-3.5 w-3.5 text-rose-600" aria-hidden="true" />
+            {mine ? "Edit my memory" : "Add memory"}
+          </button>
+          <PhotoUploader ideaId={ideaId} />
+        </div>
       ) : (
         <form
           action={action}

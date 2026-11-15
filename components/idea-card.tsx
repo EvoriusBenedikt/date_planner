@@ -6,13 +6,15 @@ import {
   Clock,
   Heart,
   Home,
+  Repeat,
   RotateCcw,
   Sparkles,
   Trees,
 } from "lucide-react";
 import { setIdeaStatus, toggleLikeIdea } from "@/app/actions/ideas";
+import { repeatIdea } from "@/app/actions/memories";
 import { IdeaMemory } from "@/components/idea-memory";
-import { thumbUrl, type Idea, type IdeaReview } from "@/lib/types";
+import { thumbUrl, type Idea, type IdeaPhoto, type IdeaReview } from "@/lib/types";
 
 function StatusButton({
   id,
@@ -48,6 +50,7 @@ export function IdeaCard({
   liked,
   isMatch,
   reviews,
+  photos,
   currentUserId,
   profilesById,
 }: {
@@ -56,6 +59,7 @@ export function IdeaCard({
   liked?: boolean;
   isMatch?: boolean;
   reviews?: IdeaReview[];
+  photos?: IdeaPhoto[];
   currentUserId?: string;
   profilesById?: Record<string, string>;
 }) {
@@ -159,6 +163,7 @@ export function IdeaCard({
         <IdeaMemory
           ideaId={idea.id}
           reviews={reviews ?? []}
+          photos={photos ?? []}
           currentUserId={currentUserId}
           profilesById={profilesById}
         />
@@ -207,17 +212,26 @@ export function IdeaCard({
               />
             )}
             {idea.status === "done" && (
-              <StatusButton
-                id={idea.id}
-                status="idea"
-                label="Move to ideas"
-                icon={
-                  <RotateCcw
-                    className="h-3.5 w-3.5 text-stone-600"
-                    aria-hidden="true"
-                  />
-                }
-              />
+              <>
+                <StatusButton
+                  id={idea.id}
+                  status="idea"
+                  label="Move to ideas"
+                  icon={
+                    <RotateCcw
+                      className="h-3.5 w-3.5 text-stone-600"
+                      aria-hidden="true"
+                    />
+                  }
+                />
+                <form action={repeatIdea}>
+                  <input type="hidden" name="idea_id" value={idea.id} />
+                  <button className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-100">
+                    <Repeat className="h-3.5 w-3.5" aria-hidden="true" />
+                    Do it again
+                  </button>
+                </form>
+              </>
             )}
           </div>
 
