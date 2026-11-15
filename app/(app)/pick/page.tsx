@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowRight, RefreshCw, Repeat, Sparkles } from "lucide-react";
+import { repeatIdea } from "@/app/actions/memories";
 import { getCtx } from "@/lib/auth";
+import { pickRandom } from "@/lib/memory-data";
 import { BUDGETS, SETTINGS, type Idea } from "@/lib/types";
 
 const fieldCls =
@@ -10,19 +12,33 @@ export default async function Pick({ searchParams }: PageProps<"/pick">) {
   const sp = await searchParams;
   const get = (k: string) => (Array.isArray(sp[k]) ? sp[k][0] : sp[k]) ?? "";
   const { supabase, coupleId } = await getCtx();
-  const searched = get("go") !== "";
+  const favorite = get("favorite") === "on";
+  const searched = get("go") !== "" || favorite;
 
   const minutes = Number(get("minutes"));
-  const { data } = searched
-    ? await supabase.rpc("pick_idea", {
-        p_couple: coupleId,
-        p_budget: get("budget") || null,
-        p_setting: get("setting") || null,
-        p_max_minutes: minutes > 0 ? minutes : null,
-        p_category: get("category") || null,
-      })
-    : { data: null };
-  const idea = (data as Idea[] | null)?.[0];
+  let idea: Idea | undefined;
+
+  if (searched && favorite) {
+    const { data: favData } = await supabase
+      .from("ideas")
+      .select("*, dates!inner(date_reviews!inner(would_repeat))")
+      .eq("couple_id", coupleId)
+      .eq("status", "done")
+      .eq("dates.date_reviews.would_repeat", true);
+
+    const favPool = (favData as Idea[] | null) ?? [];
+    idea = pickRandom(favPool);
+  } else if (searched) {
+    const { data } = await supabase.rpc("pick_idea", {
+      p_couple: coupleId,
+      p_budget: get("budget") || null,
+      p_setting: get("setting") || null,
+      p_max_minutes: minutes > 0 ? minutes : null,
+      p_category: get("category") || null,
+    });
+    idea = (data as Idea[] | null)?.[0];
+  }
+
   // a changing `go` value makes Reroll a fresh request
   const go = crypto.randomUUID();
   const qs = new URLSearchParams({
@@ -31,6 +47,7 @@ export default async function Pick({ searchParams }: PageProps<"/pick">) {
     setting: get("setting"),
     minutes: get("minutes"),
     category: get("category"),
+    ...(favorite ? { favorite: "on" } : {}),
   });
 
   return (
@@ -72,6 +89,15 @@ export default async function Pick({ searchParams }: PageProps<"/pick">) {
           placeholder="Category"
           className={fieldCls}
         />
+        <label className="col-span-2 flex cursor-pointer items-center gap-2 text-sm text-stone-700">
+          <input
+            type="checkbox"
+            name="favorite"
+            defaultChecked={favorite}
+            className="h-4 w-4 rounded border-stone-300 text-rose-600"
+          />
+          Repeat a favorite
+        </label>
         <button className="col-span-2 inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-rose-700">
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           Pick an idea
@@ -80,11 +106,17 @@ export default async function Pick({ searchParams }: PageProps<"/pick">) {
 
       {searched && !idea && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          No ideas match those filters. Loosen one or{" "}
-          <Link href="/ideas/new" className="font-semibold underline">
-            add more ideas
-          </Link>
-          .
+          {favorite ? (
+            "No favorites yet — mark a Done date 'Would do again'."
+          ) : (
+            <>
+              No ideas match those filters. Loosen one or{" "}
+              <Link href="/ideas/new" className="font-semibold underline">
+                add more ideas
+              </Link>
+              .
+            </>
+          )}
         </div>
       )}
 
@@ -104,13 +136,23 @@ export default async function Pick({ searchParams }: PageProps<"/pick">) {
           </div>
 
           <div className="flex flex-wrap gap-2.5 pt-1">
-            <Link
-              href={`/ideas/${idea.id}`}
-              className="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
-            >
-              View idea
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            {favorite ? (
+              <form action={repeatIdea} className="flex flex-1">
+                <input type="hidden" name="idea_id" value={idea.id} />
+                <button className="inline-flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-700">
+                  <Repeat className="h-4 w-4" aria-hidden="true" />
+                  Do it again
+                </button>
+              </form>
+            ) : (
+              <Link
+                href={`/ideas/${idea.id}`}
+                className="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
+              >
+                View idea
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            )}
             <Link
               href={`/pick?${qs}`}
               className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
