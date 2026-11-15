@@ -4,7 +4,11 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2 } from "lucide-react";
 import { prepareDatePhoto, recordDatePhoto } from "@/app/actions/memories";
-import { resizeToJpeg, validatePhotoFile } from "@/lib/image";
+import {
+  extractPhotoMetadata,
+  resizeToJpeg,
+  validatePhotoFile,
+} from "@/lib/image";
 import { createClient } from "@/lib/supabase/client";
 
 export function PhotoUploader({ ideaId }: { ideaId: string }) {
@@ -33,6 +37,7 @@ export function PhotoUploader({ ideaId }: { ideaId: string }) {
         return;
       }
 
+      const metadata = await extractPhotoMetadata(file);
       const blob = await resizeToJpeg(file);
       const storagePath = `${prepared.coupleId}/${prepared.dateId}/${crypto.randomUUID()}.jpg`;
       const supabase = createClient();
@@ -46,7 +51,11 @@ export function PhotoUploader({ ideaId }: { ideaId: string }) {
         return;
       }
 
-      const recorded = await recordDatePhoto(prepared.dateId, storagePath);
+      const recorded = await recordDatePhoto(
+        prepared.dateId,
+        storagePath,
+        metadata,
+      );
       if (recorded.error) {
         setError(recorded.error);
         return;

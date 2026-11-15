@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCtx } from "@/lib/auth";
+import { reverseGeocode } from "@/lib/geocode";
+import type { PhotoMetadata } from "@/lib/image";
 import { ensureDoneDate } from "@/lib/memories";
 import { buildRepeatRow } from "@/lib/memory-data";
 import type { Idea } from "@/lib/types";
@@ -24,9 +26,19 @@ export async function prepareDatePhoto(
   }
 }
 
+const photoMetadataSchema = z
+  .object({
+    takenAt: z.string().datetime().nullable(),
+    takenHour: z.number().int().min(0).max(23).nullable(),
+    lat: z.number().min(-90).max(90).nullable(),
+    lng: z.number().min(-180).max(180).nullable(),
+  })
+  .optional();
+
 export async function recordDatePhoto(
   dateId: string,
   storagePath: string,
+  metadata?: PhotoMetadata,
 ): Promise<{ error?: string }> {
   const ctx = await getCtx();
   const parsedDateId = z.string().uuid().safeParse(dateId);
@@ -37,11 +49,28 @@ export async function recordDatePhoto(
     return { error: "Invalid photo path" };
   }
 
+  const parsedMeta = photoMetadataSchema.safeParse(metadata);
+  const meta = parsedMeta.success ? parsedMeta.data : undefined;
+
+  let city: string | null = null;
+  let area: string | null = null;
+  if (meta?.lat != null && meta?.lng != null) {
+    const place = await reverseGeocode(meta.lat, meta.lng);
+    city = place.city;
+    area = place.area;
+  }
+
   const { error } = await ctx.supabase.from("date_photos").insert({
     date_id: parsedDateId.data,
     couple_id: ctx.coupleId,
     uploaded_by: ctx.user.id,
     storage_path: storagePath,
+    taken_at: meta?.takenAt ?? null,
+    taken_hour: meta?.takenHour ?? null,
+    lat: meta?.lat ?? null,
+    lng: meta?.lng ?? null,
+    city,
+    area,
   });
 
   if (error) return { error: error.message };

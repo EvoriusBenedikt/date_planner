@@ -13,7 +13,9 @@ async function MemoriesContent() {
     getProgress(),
     supabase
       .from("date_photos")
-      .select("id, storage_path, created_at, dates(title, scheduled_at, created_at)")
+      .select(
+        "id, storage_path, created_at, city, area, dates(title, scheduled_at, created_at)",
+      )
       .order("created_at", { ascending: false }),
   ]);
 
@@ -21,6 +23,8 @@ async function MemoriesContent() {
     id: string;
     storage_path: string;
     created_at: string;
+    city: string | null;
+    area: string | null;
     dates: { title: string | null } | { title: string | null }[] | null;
   }[];
 
@@ -34,9 +38,11 @@ async function MemoriesContent() {
       const url = signedMap[r.storage_path];
       if (!url) return null;
       const dateObj = Array.isArray(r.dates) ? r.dates[0] : r.dates;
+      const title = dateObj?.title || "Date memory";
+      const place = [r.area, r.city].filter(Boolean).join(", ");
       return {
         url,
-        caption: dateObj?.title || "Date memory",
+        caption: place ? `${title} · ${place}` : title,
       };
     })
     .filter((x): x is { url: string; caption: string } => x !== null);
@@ -45,7 +51,7 @@ async function MemoriesContent() {
     <div className="space-y-6">
       <LevelCard progress={progress} />
       <PhotoCarousel photos={photos} />
-      <MilestonesGrid milestones={progress.milestones} />
+      <MilestonesGrid milestones={progress.achievements} />
     </div>
   );
 }

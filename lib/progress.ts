@@ -21,7 +21,7 @@ export const getProgress = cache(async (): Promise<Progress> => {
     supabase
       .from("date_reviews")
       .select("date_id, user_id, rating, would_repeat"),
-    supabase.from("date_photos").select("date_id"),
+    supabase.from("date_photos").select("date_id, taken_hour, lat, lng, city"),
   ]);
 
   return computeProgress({

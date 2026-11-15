@@ -1,3 +1,5 @@
+import { topCityPlaces } from "./location";
+
 export type ProgressInput = {
   ideas: {
     id: string;
@@ -15,10 +17,16 @@ export type ProgressInput = {
     rating: number | null;
     would_repeat: boolean | null;
   }[];
-  photos: { date_id: string }[];
+  photos: {
+    date_id: string;
+    taken_hour?: number | null;
+    lat?: number | null;
+    lng?: number | null;
+    city?: string | null;
+  }[];
 };
 
-export type Milestone = {
+export type Achievement = {
   id: string;
   title: string;
   description: string;
@@ -37,7 +45,7 @@ export type Progress = {
   doneCount: number;
   photoCount: number;
   fiveStarCount: number;
-  milestones: Milestone[];
+  achievements: Achievement[];
 };
 
 const LEVEL_TITLES = [
@@ -115,16 +123,21 @@ export function computeProgress(input: ProgressInput): Progress {
     }
   }
 
-  const ideasByCreator = new Map<string, number>();
-  for (const idea of input.ideas) {
-    ideasByCreator.set(
-      idea.created_by,
-      (ideasByCreator.get(idea.created_by) ?? 0) + 1,
-    );
-  }
-  let contributorsWithThree = 0;
-  for (const count of ideasByCreator.values()) {
-    if (count >= 3) contributorsWithThree += 1;
+  const { city: topCity, places: topPlaces, distinctCities } = topCityPlaces(
+    input.photos.map((p) => ({
+      lat: p.lat ?? null,
+      lng: p.lng ?? null,
+      city: p.city ?? null,
+    })),
+  );
+
+  let nightPhotos = 0;
+  let goldenPhotos = 0;
+  for (const p of input.photos) {
+    const h = p.taken_hour;
+    if (typeof h !== "number") continue;
+    if (h >= 22 || h <= 3) nightPhotos += 1;
+    if (h >= 17 && h <= 18) goldenPhotos += 1;
   }
 
   const xp =
@@ -140,46 +153,55 @@ export function computeProgress(input: ProgressInput): Progress {
   const xpForNextLevel = Math.max(1, nextThreshold - currentThreshold);
   const pct = Math.floor((xpIntoLevel / xpForNextLevel) * 100);
   const photoCount = input.photos.length;
+  const cityLabel = topCity ?? "one city";
 
-  const milestones: Milestone[] = [
+  const achievements: Achievement[] = [
     {
-      id: "first-date",
-      title: "First Date",
-      description: "Complete your first date together",
-      unlocked: doneCount >= 1,
-      current: Math.min(doneCount, 1),
-      target: 1,
-    },
-    {
-      id: "getting-started",
-      title: "Getting Started",
-      description: "Complete 5 dates together",
-      unlocked: doneCount >= 5,
-      current: Math.min(doneCount, 5),
-      target: 5,
-    },
-    {
-      id: "double-digits",
-      title: "Double Digits",
-      description: "Complete 10 dates together",
-      unlocked: doneCount >= 10,
-      current: Math.min(doneCount, 10),
-      target: 10,
-    },
-    {
-      id: "quarter-century",
-      title: "Quarter Century",
-      description: "Complete 25 dates together",
-      unlocked: doneCount >= 25,
-      current: Math.min(doneCount, 25),
-      target: 25,
-    },
-    {
-      id: "picture-perfect",
-      title: "Picture Perfect",
+      id: "first-snapshot",
+      title: "First Snapshot",
       description: "Save your first date photo",
       unlocked: photoCount >= 1,
       current: Math.min(photoCount, 1),
+      target: 1,
+    },
+    {
+      id: "local-regulars",
+      title: "Local Regulars",
+      description: `Visit 3 different places in ${cityLabel}`,
+      unlocked: topPlaces >= 3,
+      current: Math.min(topPlaces, 3),
+      target: 3,
+    },
+    {
+      id: "city-explorers",
+      title: "City Explorers",
+      description: `Visit 10 different places in ${cityLabel}`,
+      unlocked: topPlaces >= 10,
+      current: Math.min(topPlaces, 10),
+      target: 10,
+    },
+    {
+      id: "out-of-town",
+      title: "Out of Town",
+      description: "Capture date photos in 2 different cities",
+      unlocked: distinctCities >= 2,
+      current: Math.min(distinctCities, 2),
+      target: 2,
+    },
+    {
+      id: "night-owls",
+      title: "Night Owls",
+      description: "Snap a date photo late at night (10 PM–4 AM)",
+      unlocked: nightPhotos >= 1,
+      current: Math.min(nightPhotos, 1),
+      target: 1,
+    },
+    {
+      id: "golden-hour",
+      title: "Golden Hour",
+      description: "Snap a date photo around sunset (5–7 PM)",
+      unlocked: goldenPhotos >= 1,
+      current: Math.min(goldenPhotos, 1),
       target: 1,
     },
     {
@@ -198,14 +220,6 @@ export function computeProgress(input: ProgressInput): Progress {
       current: Math.min(fiveStarCount, 1),
       target: 1,
     },
-    {
-      id: "team-effort",
-      title: "Team Effort",
-      description: "Each of you saves at least 3 ideas",
-      unlocked: contributorsWithThree >= 2,
-      current: Math.min(contributorsWithThree, 2),
-      target: 2,
-    },
   ];
 
   return {
@@ -218,6 +232,6 @@ export function computeProgress(input: ProgressInput): Progress {
     doneCount,
     photoCount,
     fiveStarCount,
-    milestones,
+    achievements,
   };
 }

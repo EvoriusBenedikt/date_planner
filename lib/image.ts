@@ -1,5 +1,61 @@
+import exifr from "exifr";
+
 export const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 export const MAX_EDGE = 1280;
+
+export type PhotoMetadata = {
+  takenAt: string | null;
+  takenHour: number | null;
+  lat: number | null;
+  lng: number | null;
+};
+
+export async function extractPhotoMetadata(file: File): Promise<PhotoMetadata> {
+  try {
+    const parsed = (await exifr.parse(file, {
+      gps: true,
+      pick: [
+        "DateTimeOriginal",
+        "CreateDate",
+        "GPSLatitude",
+        "GPSLongitude",
+        "GPSLatitudeRef",
+        "GPSLongitudeRef",
+      ],
+    })) as
+      | {
+          DateTimeOriginal?: Date;
+          CreateDate?: Date;
+          latitude?: number;
+          longitude?: number;
+        }
+      | undefined;
+
+    if (!parsed) {
+      return { takenAt: null, takenHour: null, lat: null, lng: null };
+    }
+
+    const dt = parsed.DateTimeOriginal ?? parsed.CreateDate ?? null;
+    const validDate = dt instanceof Date && !Number.isNaN(dt.getTime()) ? dt : null;
+    const lat =
+      typeof parsed.latitude === "number" && Number.isFinite(parsed.latitude)
+        ? parsed.latitude
+        : null;
+    const lng =
+      typeof parsed.longitude === "number" && Number.isFinite(parsed.longitude)
+        ? parsed.longitude
+        : null;
+
+    return {
+      takenAt: validDate ? validDate.toISOString() : null,
+      takenHour: validDate ? validDate.getHours() : null,
+      lat,
+      lng,
+    };
+  } catch {
+    return { takenAt: null, takenHour: null, lat: null, lng: null };
+  }
+}
 
 export function fitWithin(
   w: number,

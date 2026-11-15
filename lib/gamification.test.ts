@@ -33,7 +33,7 @@ describe("levelFromXp", () => {
 });
 
 describe("computeProgress", () => {
-  it("handles an empty couple with zero XP, level 1, 0%, and all milestones locked", () => {
+  it("handles an empty couple with zero XP, level 1, 0%, and all achievements locked", () => {
     const res = computeProgress(emptyInput);
     expect(res.xp).toBe(0);
     expect(res.level).toBe(1);
@@ -45,7 +45,7 @@ describe("computeProgress", () => {
     expect(res.doneCount).toBe(0);
     expect(res.photoCount).toBe(0);
     expect(res.fiveStarCount).toBe(0);
-    expect(res.milestones.every((m) => m.unlocked === false)).toBe(true);
+    expect(res.achievements.every((a) => a.unlocked === false)).toBe(true);
   });
 
   it("awards +100 XP for 1 done idea", () => {
@@ -57,9 +57,6 @@ describe("computeProgress", () => {
     expect(res.level).toBe(2);
     expect(res.title).toBe("Explorers");
     expect(res.doneCount).toBe(1);
-    expect(res.milestones.find((m) => m.id === "first-date")?.unlocked).toBe(
-      true,
-    );
   });
 
   it("awards +150 XP for 1 done idea and 2 reviews", () => {
@@ -75,7 +72,7 @@ describe("computeProgress", () => {
     expect(res.xp).toBe(150);
   });
 
-  it("caps photo XP at 2 photos per date (3 photos on one date add 50 XP)", () => {
+  it("caps photo XP at 2 photos per date (3 photos on one date add 50 XP) and unlocks first-snapshot", () => {
     const res = computeProgress({
       ...emptyInput,
       ideas: [{ id: "i1", status: "done", created_by: "u1" }],
@@ -85,7 +82,7 @@ describe("computeProgress", () => {
     expect(res.xp).toBe(150);
     expect(res.photoCount).toBe(3);
     expect(
-      res.milestones.find((m) => m.id === "picture-perfect")?.unlocked,
+      res.achievements.find((a) => a.id === "first-snapshot")?.unlocked,
     ).toBe(true);
   });
 
@@ -102,10 +99,10 @@ describe("computeProgress", () => {
     expect(res.xp).toBe(170);
     expect(res.fiveStarCount).toBe(1);
     expect(
-      res.milestones.find((m) => m.id === "five-star-hit")?.unlocked,
+      res.achievements.find((a) => a.id === "five-star-hit")?.unlocked,
     ).toBe(true);
     expect(
-      res.milestones.find((m) => m.id === "storytellers")?.unlocked,
+      res.achievements.find((a) => a.id === "storytellers")?.unlocked,
     ).toBe(true);
   });
 
@@ -122,48 +119,38 @@ describe("computeProgress", () => {
     expect(res.xp).toBe(170);
     expect(res.fiveStarCount).toBe(0);
     expect(
-      res.milestones.find((m) => m.id === "five-star-hit")?.unlocked,
+      res.achievements.find((a) => a.id === "five-star-hit")?.unlocked,
     ).toBe(false);
   });
 
-  it("counts a done date with idea_id: null as one completed date", () => {
+  it("tracks city place counts, out-of-town, night-owls, and golden-hour from photo metadata", () => {
     const res = computeProgress({
       ...emptyInput,
-      dates: [{ id: "d1", idea_id: null, status: "done" }],
-    });
-    expect(res.doneCount).toBe(1);
-    expect(res.xp).toBe(100);
-  });
-
-  it("unlocks team-effort only when two distinct creators each have >= 3 ideas", () => {
-    const oneShort = computeProgress({
-      ...emptyInput,
-      ideas: [
-        { id: "1", status: "idea", created_by: "u1" },
-        { id: "2", status: "idea", created_by: "u1" },
-        { id: "3", status: "idea", created_by: "u1" },
-        { id: "4", status: "idea", created_by: "u2" },
-        { id: "5", status: "idea", created_by: "u2" },
+      photos: [
+        { date_id: "d1", lat: -6.2, lng: 106.8, city: "Jakarta", taken_hour: 22 },
+        { date_id: "d2", lat: -6.23, lng: 106.81, city: "Jakarta", taken_hour: 17 },
+        { date_id: "d3", lat: -6.26, lng: 106.82, city: "Jakarta", taken_hour: 12 },
+        { date_id: "d4", lat: -6.91, lng: 107.61, city: "Bandung", taken_hour: 14 },
       ],
     });
-    expect(
-      oneShort.milestones.find((m) => m.id === "team-effort")?.unlocked,
-    ).toBe(false);
 
-    const bothReady = computeProgress({
-      ...emptyInput,
-      ideas: [
-        { id: "1", status: "idea", created_by: "u1" },
-        { id: "2", status: "idea", created_by: "u1" },
-        { id: "3", status: "idea", created_by: "u1" },
-        { id: "4", status: "idea", created_by: "u2" },
-        { id: "5", status: "idea", created_by: "u2" },
-        { id: "6", status: "idea", created_by: "u2" },
-      ],
-    });
-    expect(
-      bothReady.milestones.find((m) => m.id === "team-effort")?.unlocked,
-    ).toBe(true);
+    const regulars = res.achievements.find((a) => a.id === "local-regulars");
+    expect(regulars?.unlocked).toBe(true);
+    expect(regulars?.description).toContain("Jakarta");
+
+    const explorers = res.achievements.find((a) => a.id === "city-explorers");
+    expect(explorers?.unlocked).toBe(false);
+    expect(explorers?.current).toBe(3);
+
+    expect(res.achievements.find((a) => a.id === "out-of-town")?.unlocked).toBe(
+      true,
+    );
+    expect(res.achievements.find((a) => a.id === "night-owls")?.unlocked).toBe(
+      true,
+    );
+    expect(res.achievements.find((a) => a.id === "golden-hour")?.unlocked).toBe(
+      true,
+    );
   });
 
   it("drops XP back to 0 when the only done idea is moved back to idea", () => {

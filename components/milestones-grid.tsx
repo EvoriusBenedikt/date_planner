@@ -1,11 +1,15 @@
 import { Award, Lock } from "lucide-react";
-import type { Milestone } from "@/lib/gamification";
+import type { Achievement } from "@/lib/gamification";
 
-export function MilestonesGrid({ milestones }: { milestones: Milestone[] }) {
+export function MilestonesGrid({
+  milestones,
+}: {
+  milestones: Achievement[];
+}) {
   return (
     <section className="space-y-3">
       <h2 className="font-display text-lg font-semibold tracking-tight text-stone-900">
-        Milestones
+        Achievements
       </h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {milestones.map((m) => (
