@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Heart,
+  Images,
   Lightbulb,
   Plus,
   Settings,
@@ -13,6 +14,7 @@ import {
 const navItems = [
   { href: "/", label: "Ideas", icon: Lightbulb },
   { href: "/pick", label: "Pick", icon: Sparkles },
+  { href: "/memories", label: "Memories", icon: Images },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -21,21 +23,24 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export function TopNav() {
+export function TopNav({ levelSlot }: { levelSlot?: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 rounded-lg py-1 font-display text-lg font-semibold tracking-tight text-stone-900 transition-colors hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs">
-            <Heart className="h-4 w-4 fill-current" aria-hidden="true" />
-          </span>
-          <span>Date Planner</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-2 rounded-lg py-1 font-display text-lg font-semibold tracking-tight text-stone-900 transition-colors hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs">
+              <Heart className="h-4 w-4 fill-current" aria-hidden="true" />
+            </span>
+            <span>Date Planner</span>
+          </Link>
+          {levelSlot && <div className="hidden md:block">{levelSlot}</div>}
+        </div>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
           {navItems.map(({ href, label, icon: Icon }) => {
@@ -64,13 +69,7 @@ export function TopNav() {
           </Link>
         </nav>
 
-        <Link
-          href="/ideas/new"
-          className="inline-flex h-9 items-center gap-1 rounded-full bg-rose-50 px-3 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 md:hidden"
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          New
-        </Link>
+        {levelSlot ? <div className="md:hidden">{levelSlot}</div> : null}
       </div>
     </header>
   );
@@ -84,7 +83,7 @@ export function BottomNav() {
       aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200/90 bg-white/95 pb-[max(0.35rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
     >
-      <div className="mx-auto grid max-w-md grid-cols-4 items-center px-2 pt-1.5">
+      <div className="mx-auto grid max-w-md grid-cols-5 items-center px-2 pt-1.5">
         {navItems.slice(0, 2).map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
