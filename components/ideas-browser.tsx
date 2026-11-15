@@ -5,7 +5,13 @@ import { useMemo, useState } from "react";
 import { Heart, Lightbulb, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { IdeaCard } from "@/components/idea-card";
 import { QuickAdd } from "@/components/quick-add";
-import { BUDGETS, SETTINGS, type Idea, type IdeaReview } from "@/lib/types";
+import {
+  BUDGETS,
+  SETTINGS,
+  type Idea,
+  type IdeaPhoto,
+  type IdeaReview,
+} from "@/lib/types";
 
 const STATUS_OPTIONS = [
   { value: "idea", label: "Ideas" },
@@ -24,6 +30,7 @@ export function IdeasBrowser({
   likedIds,
   matchIds,
   reviewsByIdeaId,
+  photosByIdeaId = {},
   currentUserId,
 }: {
   ideas: Idea[];
@@ -31,6 +38,7 @@ export function IdeasBrowser({
   likedIds: string[];
   matchIds: string[];
   reviewsByIdeaId: Record<string, IdeaReview[]>;
+  photosByIdeaId?: Record<string, IdeaPhoto[]>;
   currentUserId: string;
 }) {
   const [status, setStatus] = useState<string>("idea");

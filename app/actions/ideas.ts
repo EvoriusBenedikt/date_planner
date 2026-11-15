@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCtx } from "@/lib/auth";
+import { ensureDoneDate } from "@/lib/memories";
 import { resolveTikTokInput } from "@/lib/links/resolve";
 import { extractUrl } from "@/lib/links/tiktok";
 import { fromForm, ideaSchema } from "@/lib/schemas";
@@ -150,35 +151,11 @@ export async function saveIdeaMemory(_: FormState, fd: FormData): Promise<FormSt
   const note = String(fd.get("note") ?? "").trim() || null;
   const wouldRepeat = fd.get("would_repeat") === "on";
 
-  const { data: existingDate } = await ctx.supabase
-    .from("dates")
-    .select("id")
-    .eq("idea_id", ideaId)
-    .eq("couple_id", ctx.coupleId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  let dateId = existingDate?.id as string | undefined;
-  if (!dateId) {
-    const { data: idea } = await ctx.supabase
-      .from("ideas")
-      .select("title")
-      .eq("id", ideaId)
-      .single();
-    const { data: created, error: createErr } = await ctx.supabase
-      .from("dates")
-      .insert({
-        couple_id: ctx.coupleId,
-        idea_id: ideaId,
-        created_by: ctx.user.id,
-        title: idea?.title ?? "Date",
-        status: "done",
-      })
-      .select("id")
-      .single();
-    if (createErr || !created) return { error: createErr?.message ?? "Could not save memory" };
-    dateId = created.id;
+  let dateId: string;
+  try {
+    dateId = await ensureDoneDate(ctx, ideaId);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not save memory" };
   }
 
   const { error } = await ctx.supabase.from("date_reviews").upsert({
@@ -190,6 +167,7 @@ export async function saveIdeaMemory(_: FormState, fd: FormData): Promise<FormSt
   });
   if (error) return { error: error.message };
   revalidatePath("/");
+  revalidatePath("/memories");
   return null;
 }
 

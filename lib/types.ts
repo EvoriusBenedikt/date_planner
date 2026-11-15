@@ -5,6 +5,12 @@ export type IdeaReview = {
   would_repeat: boolean | null;
 };
 
+export type IdeaPhoto = {
+  id: string;
+  storage_path: string;
+  url: string;
+};
+
 export type Idea = {
   id: string;
   created_by: string;

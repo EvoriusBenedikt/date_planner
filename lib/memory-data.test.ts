@@ -21,13 +21,12 @@ describe("buildRepeatRow", () => {
   it("clones idea fields with status idea, supplied ctx, preserved thumbnail_path, and no source_external_id", () => {
     const idea: Idea = {
       id: "old-id",
-      couple_id: "old-couple",
       created_by: "old-user",
       title: "Midnight Ramen",
       notes: "Extra egg",
       category: "food",
-      budget: "$$",
-      setting: "out",
+      budget: "medium",
+      setting: "outdoor",
       duration_minutes: 90,
       status: "done",
       source_url: "https://www.tiktok.com/@u/video/123456789",
@@ -36,7 +35,6 @@ describe("buildRepeatRow", () => {
       source_author: "@u",
       source_caption: "Best ramen",
       thumbnail_path: "couple/thumb.jpg",
-      created_at: "2026-01-01T00:00:00Z",
     };
 
     const row = buildRepeatRow(idea, {
@@ -50,8 +48,8 @@ describe("buildRepeatRow", () => {
       title: "Midnight Ramen",
       notes: "Extra egg",
       category: "food",
-      budget: "$$",
-      setting: "out",
+      budget: "medium",
+      setting: "outdoor",
       duration_minutes: 90,
       source_url: "https://www.tiktok.com/@u/video/123456789",
       source_type: "tiktok",
