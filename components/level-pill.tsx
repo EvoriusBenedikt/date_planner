@@ -16,11 +16,11 @@ export async function LevelPill() {
   return (
     <Link
       href="/memories"
-      className="inline-flex min-h-[36px] items-center gap-2 rounded-full border border-rose-200/80 bg-rose-50/70 px-3 py-1 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+      className="inline-flex min-h-[36px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-rose-200/80 bg-rose-50/70 px-3 py-1 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
     >
       <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span>Lv. {progress.level}</span>
-      <span className="hidden text-rose-600/90 sm:inline">
+      <span className="hidden text-rose-600/90 lg:inline">
         {progress.title}
       </span>
       <span

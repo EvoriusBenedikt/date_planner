@@ -174,6 +174,6 @@ export async function saveIdeaMemory(_: FormState, fd: FormData): Promise<FormSt
 export async function deleteIdea(fd: FormData) {
   const ctx = await getCtx();
   await ctx.supabase.from("ideas").delete().eq("id", z.string().uuid().parse(fd.get("id")));
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   redirect("/");
 }

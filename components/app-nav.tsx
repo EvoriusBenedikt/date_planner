@@ -28,13 +28,13 @@ export function TopNav({ levelSlot }: { levelSlot?: React.ReactNode }) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-3">
+      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-2 px-4 sm:px-6">
+        <div className="flex shrink-0 items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-lg py-1 font-display text-lg font-semibold tracking-tight text-stone-900 transition-colors hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+            className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg py-1 font-display text-lg font-semibold tracking-tight text-stone-900 transition-colors hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs">
               <Heart className="h-4 w-4 fill-current" aria-hidden="true" />
             </span>
             <span>Date Planner</span>
@@ -49,22 +49,22 @@ export function TopNav({ levelSlot }: { levelSlot?: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
+                className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
                   active
                     ? "bg-rose-50 text-rose-700"
                     : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
                 }`}
               >
-                <Icon className="h-4 w-4" aria-hidden="true" />
+                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 {label}
               </Link>
             );
           })}
           <Link
             href="/ideas/new"
-            className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition-colors hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+            className="ml-2 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-rose-600 px-3.5 py-2 text-sm font-medium text-white shadow-xs transition-colors hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
           >
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
             Add idea
           </Link>
         </nav>

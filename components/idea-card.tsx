@@ -1,4 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
+"use client";
+
 import Link from "next/link";
 import {
   Archive,
@@ -9,9 +11,10 @@ import {
   Repeat,
   RotateCcw,
   Sparkles,
+  Trash2,
   Trees,
 } from "lucide-react";
-import { setIdeaStatus, toggleLikeIdea } from "@/app/actions/ideas";
+import { deleteIdea, setIdeaStatus, toggleLikeIdea } from "@/app/actions/ideas";
 import { repeatIdea } from "@/app/actions/memories";
 import { IdeaMemory } from "@/components/idea-memory";
 import { thumbUrl, type Idea, type IdeaPhoto, type IdeaReview } from "@/lib/types";
@@ -235,25 +238,43 @@ export function IdeaCard({
             )}
           </div>
 
-          {idea.status === "idea" && (
-            <form action={toggleLikeIdea}>
-              <input type="hidden" name="idea_id" value={idea.id} />
+          <div className="flex items-center gap-2">
+            {idea.status === "idea" && (
+              <form action={toggleLikeIdea}>
+                <input type="hidden" name="idea_id" value={idea.id} />
+                <button
+                  aria-label={liked ? "Remove vote" : "I'm down"}
+                  className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    liked
+                      ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                      : "border-stone-200 bg-white text-stone-600 hover:border-rose-200 hover:text-rose-600"
+                  }`}
+                >
+                  <Heart
+                    className={`h-3.5 w-3.5 ${liked ? "fill-current" : ""}`}
+                    aria-hidden="true"
+                  />
+                  {liked ? "I'm down" : "Down?"}
+                </button>
+              </form>
+            )}
+            <form
+              action={deleteIdea}
+              onSubmit={(e) => {
+                if (!confirm("Delete this idea?")) e.preventDefault();
+              }}
+            >
+              <input type="hidden" name="id" value={idea.id} />
               <button
-                aria-label={liked ? "Remove vote" : "I'm down"}
-                className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  liked
-                    ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
-                    : "border-stone-200 bg-white text-stone-600 hover:border-rose-200 hover:text-rose-600"
-                }`}
+                type="submit"
+                aria-label="Delete idea"
+                title="Delete idea"
+                className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-stone-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
               >
-                <Heart
-                  className={`h-3.5 w-3.5 ${liked ? "fill-current" : ""}`}
-                  aria-hidden="true"
-                />
-                {liked ? "I'm down" : "Down?"}
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </form>
-          )}
+          </div>
         </div>
       )}
     </article>
