@@ -3,9 +3,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 // Session + couple membership gate. Memoized per-request so layout + page share one lookup.
+// Proxy already validates/refreshes the session via getUser(), so reading getSession() avoids a duplicate Auth round-trip.
 export const getCtx = cache(async () => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? (await supabase.auth.getUser()).data.user;
   if (!user) redirect("/login");
   const { data: m } = await supabase
     .from("couple_members")
